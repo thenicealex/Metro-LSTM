@@ -28,6 +28,16 @@ python single.py
 python multi.py
 ```
 
+### Plot
+
+```bash
+# for univariate
+python plot.py
+
+# for multivariate
+python plot_multi.py
+```
+
 ## Introduction
 
 The dataset used in this project contains hourly traffic volume data for a city in the US. The data was collected from 2012 to 2018. The goal of this project is to predict the traffic volume for the next hour based on the historical data. The dataset contains the following columns:

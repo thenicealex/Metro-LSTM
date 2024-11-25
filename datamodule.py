@@ -24,7 +24,7 @@ class TrafficVolumeDataset(Dataset):
         return torch.FloatTensor(self.X[idx]).view(-1, 1), torch.FloatTensor(
             [self.y[idx]]
         )
-        
+
 
 class TrafficVolumeDatasetMulti(Dataset):
     def __init__(self, features, targets, time_step=24):

@@ -44,6 +44,7 @@ class LSTM(nn.Module):
         out = self.fc(out[:, -1, :])
         return out
 
+
 class MultiLSTM(nn.Module):
     def __init__(self, cfg: dict):
         super().__init__()
@@ -84,19 +85,5 @@ class MultiLSTM(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
 
         # out = self.dropout(out[:, -1, :])
-        out = self.fc(out[:, -1, :])
-        return out
-
-# BiGRU 还没有测试
-class BiGRU(nn.Module):
-    def __init__(self, input_size=1, hidden_size=64, num_layers=1):
-        super(BiGRU, self).__init__()
-        self.gru = nn.GRU(
-            input_size, hidden_size, num_layers, bidirectional=True, batch_first=True
-        )
-        self.fc = nn.Linear(hidden_size * 2, 1)
-
-    def forward(self, x):
-        out, _ = self.gru(x)
         out = self.fc(out[:, -1, :])
         return out
