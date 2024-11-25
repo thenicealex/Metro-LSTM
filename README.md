@@ -1,7 +1,7 @@
 # Traffic Volume Prediction Using LSTM
 
-
 ## Table of Contents
+
 1. [Introduction](#introduction)
 2. [Data Description](#data-description)
 3. [Data Preprocessing](#data-preprocessing)
@@ -10,8 +10,28 @@
 6. [Conclusion](#conclusion)
 7. [References](#references)
 
+## Usage
+
+To run the project, you need to install some libraries.
+Then, Set up the data path in config.ymal(config_m.ymal) file.
+
+
+### Univariate Time Forecasting
+
+```bash
+python single.py
+```
+
+### Multivariate Time Forecasting
+
+```bash
+python multi.py
+```
+
 ## Introduction
+
 The dataset used in this project contains hourly traffic volume data for a city in the US. The data was collected from 2012 to 2018. The goal of this project is to predict the traffic volume for the next hour based on the historical data. The dataset contains the following columns:
+
 - `holiday`: Categorical US National holidays plus regional holiday, Minnesota State Fair
 - `temp`: Numeric Average temp in kelvin
 - `rain_1h`: Numeric Amount in mm of rain that occurred in the hour
@@ -25,6 +45,7 @@ The dataset used in this project contains hourly traffic volume data for a city 
 ## Data Description
 
 The dataset contains 48204 rows and 9 columns. The columns are as follows:
+
 - `holiday`: 61 non-null object
 - `temp`: 48204 non-null float64
 - `rain_1h`: 48204 non-null float64
@@ -37,7 +58,8 @@ The dataset contains 48204 rows and 9 columns. The columns are as follows:
 
 ## Data Preprocessing
 
-The following steps were performed to preprocess the data:
+The following steps were performed to pre-process the data:
+
 - Removed the columns `holiday`, `weather_main`, `weather_description`, and `date_time` as they are not required for the model.
 - Converted the `date_time` column to a datetime object and set it as the index.
 - Created a new column `hour` to store the hour of the day.
@@ -58,7 +80,6 @@ In Detail: model.py
 The model was evaluated using the Mean Squared Error (MSE) metric.
 
 ## Conclusion
-
 
 ## References
 

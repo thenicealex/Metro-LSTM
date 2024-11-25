@@ -1,4 +1,6 @@
-ckpt/
-images/
+ckpt/*
+!ckpt/
+images/*
+!images/
 notebooks/
 __pycache__/
