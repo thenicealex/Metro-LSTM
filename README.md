@@ -1,5 +1,7 @@
 # Traffic Volume Prediction Using LSTM
 
+## The code structure is not good and needs to be refactored
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
