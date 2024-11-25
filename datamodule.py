@@ -36,7 +36,7 @@ class TrafficVolumeDatasetMulti(Dataset):
 
     def create_dataset(self, features, targets, time_step=24):
         X, y = [], []
-        for i in range(len(features) - time_step):
+        for i in range(len(features) - time_step - 1):
             X.append(features[i : (i + time_step)])
             y.append(targets[i + time_step])
         return np.array(X), np.array(y)

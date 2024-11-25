@@ -33,10 +33,7 @@ class LSTM(nn.Module):
 
     def forward(self, x):
         x = self.cov1(x)
-        if self.bidirectional:
-            num_layers = self.num_layers * 2
-        else:
-            num_layers = self.num_layers
+        num_layers = self.num_layers * 2 if self.bidirectional else self.num_layers
         h0 = torch.zeros(num_layers, x.size(0), self.hidden_size).to(x.device)
         c0 = torch.zeros(num_layers, x.size(0), self.hidden_size).to(x.device)
         out, _ = self.lstm(x, (h0, c0))

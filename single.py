@@ -11,34 +11,26 @@ from torch.utils.data import DataLoader
 from datamodule import TrafficVolumeDataset
 from sklearn.preprocessing import MinMaxScaler
 
-
-with open("config.yaml", "r") as file:
-    config = yaml.safe_load(file)
-
-torch.manual_seed(config["train"]["seed"])
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-best_model_path = Path(config["best_model_path"])
-data_path = Path(config["data"]["path"])
 
-batch_size = config["train"]["batch_size"]
-learning_rate = config["train"]["lr"]
-num_epochs = config["train"]["epochs"]
-patience = config["train"].get("early_stopping_patience", 10)
+def load_config(config_path="config.yaml"):
+    with open(config_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config
 
 
 def prepare_datasets(data_path, config):
-    single_data = pd.read_csv(
+    data = pd.read_csv(
         data_path,
         parse_dates=True,
         index_col="date_time",
         usecols=["date_time", "traffic_volume"],
     )
-    traffic_volume_data = single_data["traffic_volume"].values
+    traffic_volume_data = data["traffic_volume"].values
 
     scaler = MinMaxScaler(feature_range=(0, 1))
     traffic_volume_scaled = scaler.fit_transform(
@@ -56,18 +48,33 @@ def prepare_datasets(data_path, config):
     test_dataset = TrafficVolumeDataset(
         test_dataset, time_step=config["data"]["time_step"]
     )
+    logging.info(
+        f"Train Dataset Length: {len(train_dataset)}, Test Dataset Length: {len(test_dataset)}"
+    )
 
     return train_dataset, test_dataset, scaler
 
+
+config = load_config()
+
+torch.manual_seed(config["train"]["seed"])
+
+best_model_path = Path(config["best_model_path"])
+data_path = Path(config["data"]["path"])
+
+batch_size = config["train"]["batch_size"]
+learning_rate = config["train"]["lr"]
+num_epochs = config["train"]["epochs"]
+patience = config["train"].get("early_stopping_patience", 10)
+epochs_no_improve = config["train"]["epochs_no_improve"]
 
 train_dataset, test_dataset, scaler = prepare_datasets(data_path, config)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
-
 model_params = config["model"]
 model = LSTM(model_params)
-print(model)
+logging.info(f"Model Architecture: {model}")
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -108,7 +115,6 @@ def evaluate_model(model, val_loader, criterion, device):
 train_losses = []
 test_losses = []
 best_val_loss = float("inf")
-epochs_no_improve = 10
 
 model.to(device)
 for epoch in range(num_epochs):
@@ -136,6 +142,8 @@ for epoch in range(num_epochs):
             f"Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.8f}, Test Loss: {test_loss:.8f}"
         )
 
+logging.info("Training Completed!")
+
 epochs_plot = [x[0] for x in train_losses]
 train_losses_values = [x[1] for x in train_losses]
 test_losses_values = [x[1] for x in test_losses]
@@ -156,6 +164,7 @@ plt.legend()
 plt.savefig("images/single_train_val_loss.png")
 plt.close()
 
+logging.info(f"loss image saved at images/single_train_val_loss.png")
 
 predictions = []
 ground_true = []
@@ -171,14 +180,20 @@ with torch.no_grad():
 y_pred = scaler.inverse_transform(np.concatenate(predictions))
 y_test = scaler.inverse_transform(np.concatenate(ground_true).reshape(-1, 1))
 
+logging.info(f"y_pred length: {len(y_pred)}, y_test length: {len(y_test)}")
+
 plt.figure(figsize=(12, 6), dpi=300)
+plt.legend()
+plt.tight_layout()
 plt.plot(y_test, label="Actual")
 plt.plot(y_pred, label="Prediction")
-plt.title("Traffic Volume Prediction")
+plt.title("Traffic Volume Test")
 plt.xlabel("Time")
 plt.ylabel("Traffic Volume")
-plt.legend()
 plt.xticks(rotation=45)
-plt.tight_layout()
 plt.savefig("images/single_traffic_volume_test.png")
 plt.close()
+
+logging.info(f"test image saved at images/single_traffic_volume_test.png")
+
+logging.info("Done!")

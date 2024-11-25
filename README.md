@@ -34,6 +34,7 @@ python multi.py
 # for univariate
 python plot.py
 
+# Failed to plot the graph for multivariate
 # for multivariate
 python plot_multi.py
 ```
