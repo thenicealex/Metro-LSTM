@@ -3,13 +3,13 @@ best_model_path: ckpt/best_model_single.pth
 data:
   name: Metro_Interstate_Traffic_Volume
   path: /home/pod/shared-nvme/datasets/Metro_Interstate_Traffic_Volume.csv
-  time_step: 24
+  time_step: 130
 
 model:
   name: LSTM
   conv1d:
-    in_channels: 24
-    out_channels: 24
+    in_channels: 130
+    out_channels: 130
     kernel_size: 1
   input_size: 1
   hidden_size: 128

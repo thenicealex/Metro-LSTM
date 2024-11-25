@@ -6,26 +6,65 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import MinMaxScaler
 
-from model import LSTM
-from datamodule import TrafficVolumeDataset
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
 
-def load_config(config_path="config.yaml"):
+from model import MultiLSTM
+from datamodule import TrafficVolumeDatasetMulti
+
+def load_config(config_path="config_m.yaml"):
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
 def load_data(data_path, time_step):
-    data = pd.read_csv(data_path, parse_dates=["date_time"], usecols=["date_time", "traffic_volume"])
-    data.set_index("date_time", inplace=True)
-    data = data[-263:]
-    scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(data["traffic_volume"].values.reshape(-1, 1)).flatten()
-    dataset = TrafficVolumeDataset(scaled, time_step)
+    
+    
+    target = ["traffic_volume"]
+    cat_vars = [
+        "holiday",
+        "snow_1h",
+        "weekday",
+        "hour",
+        "month",
+        "year",
+        "fog",
+        "haze",
+        "mist",
+        "thunderstorm",
+        "rain_1h",
+    ]
+    num_vars = ["temp", "clouds_all"]
+
+    data_features = pd.read_csv(data_path)[-263:]
+    data_features_copy = data_features.copy()
+    traffic_volume_data = data_features["traffic_volume"].values
+    data_features = data_features.drop(columns=target)
+
+    numeric_transformer = Pipeline(steps=[("scaler", StandardScaler())])
+    categorical_transformer = Pipeline(steps=[("oneHot", OneHotEncoder())])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", numeric_transformer, num_vars),
+            ("cat", categorical_transformer, cat_vars),
+        ]
+    )
+    data_feature_transformed = preprocessor.fit_transform(data_features).toarray()
+    
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    traffic_volume_scaled = scaler.fit_transform(
+        traffic_volume_data.reshape(-1, 1)
+    ).flatten()
+    
+    
+    dataset = TrafficVolumeDatasetMulti(data_feature_transformed, traffic_volume_scaled, time_step)
     loader = DataLoader(dataset, batch_size=32, shuffle=True)
-    return data, loader, scaler
+    return data_features_copy, loader, scaler
 
 def load_model(model_params, best_model_path):
-    model = LSTM(model_params)
-    model.load_state_dict(torch.load(best_model_path, map_location=torch.device('cpu'), weights_only=False))
+    model = MultiLSTM(model_params)
+    model.load_state_dict(torch.load(best_model_path, map_location=torch.device('cpu')))
     model.eval()
     return model
 
@@ -67,8 +106,8 @@ def main():
     config = load_config()
     time_step = config["data"]["time_step"]
     data_path = config["data"]["path"]
+
     data, loader, scaler = load_data(data_path, time_step)
-    
     model = load_model(config["model"], config["best_model_path"])
     y_pred = predict(model, loader)
     y_pred = scaler.inverse_transform(y_pred)
@@ -78,6 +117,8 @@ def main():
     plot_results(actual, pred_data, "Traffic Volume Prediction", "images/plot.png")
     
     history = data[-130:]
+    history = history[['traffic_volume']]
+    history.reindex(drop=True, inplace=True)
     forecast_steps = 5 * time_step
     forecast_data = forecast(model, history, scaler, time_step, forecast_steps)
     plot_results(history, forecast_data, "Traffic Volume Forecast", "images/forecast.png")
