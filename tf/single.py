@@ -5,7 +5,6 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from tensorflow.keras import layers, models
 from sklearn.model_selection import train_test_split
 
-df = pd.read_csv("/home/pod/shared-nvme/datasets/Metro_Interstate_Traffic_Volume.csv")
 data_path = "/home/pod/shared-nvme/datasets/Metro_Interstate_Traffic_Volume.csv"
 data = pd.read_csv(
     data_path,
